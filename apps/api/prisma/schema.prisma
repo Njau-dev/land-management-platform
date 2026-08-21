@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum SubscriptionInterval {
+  WEEK
+  MONTH
+  YEAR
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  MPESA
+}
+
+enum PaymentStatus {
+  INITIATED
+  PENDING
+  SUCCESSFUL
+  FAILED
+  CANCELLED
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  SOLD
+  UNDER_TRANSACTION
+}
+
+enum ZoneType {
+  RESIDENTIAL
+  COMMERCIAL
+  INDUSTRIAL
+  AGRICULTURAL
+  MIXED_USE
+  OTHER
+}
+
+enum LoanLienType {
+  LOAN
+  LIEN
+  OTHER
+}
+
+enum LoanLienStatus {
+  CLEAR
+  ACTIVE
+  OVERDUE
+}
+
+model User {
+  id           String     @id @default(cuid()) @db.VarChar(30)
+  name         String     @db.VarChar(191)
+  email        String     @unique @db.VarChar(255)
+  passwordHash String     @db.VarChar(255)
+  role         UserRole   @default(USER)
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now()) @db.DateTime(3)
+  updatedAt    DateTime   @updatedAt @db.DateTime(3)
+
+  subscriptions Subscription[]
+  payments      Payment[]
+  searchLogs    SearchLog[]
+}
+
+model SubscriptionPlan {
+  id            String               @id @default(cuid()) @db.VarChar(30)
+  name          String               @unique @db.VarChar(100)
+  priceKes      Int                  @db.UnsignedInt
+  interval      SubscriptionInterval
+  intervalCount Int                  @default(1) @db.UnsignedInt
+  isActive      Boolean              @default(true)
+  createdAt     DateTime             @default(now()) @db.DateTime(3)
+  updatedAt     DateTime             @updatedAt @db.DateTime(3)
+
+  subscriptions Subscription[]
+  payments      Payment[]
+
+  @@index([isActive])
+}
+
+model Subscription {
+  id        String             @id @default(cuid()) @db.VarChar(30)
+  userId    String             @db.VarChar(30)
+  planId    String             @db.VarChar(30)
+  startsAt  DateTime           @db.DateTime(3)
+  endsAt    DateTime           @db.DateTime(3)
+  status    SubscriptionStatus @default(ACTIVE)
+  createdAt DateTime           @default(now()) @db.DateTime(3)
+  updatedAt DateTime           @updatedAt @db.DateTime(3)
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@index([userId, status, endsAt])
+  @@index([planId])
+  @@index([status, endsAt])
+}
+
+model Payment {
+  id                 String          @id @default(cuid()) @db.VarChar(30)
+  userId             String          @db.VarChar(30)
+  planId             String          @db.VarChar(30)
+  subscriptionId     String?         @db.VarChar(30)
+  provider           PaymentProvider @default(MPESA)
+  amountKes          Int             @db.UnsignedInt
+  phoneNumber        String          @db.VarChar(20)
+  merchantRequestId  String?         @unique @db.VarChar(100)
+  checkoutRequestId  String?         @unique @db.VarChar(100)
+  mpesaReceiptNumber String?         @unique @db.VarChar(100)
+  status             PaymentStatus   @default(INITIATED)
+  resultCode         Int?
+  resultDescription  String?         @db.VarChar(500)
+  providerMetadata   Json?
+  createdAt          DateTime        @default(now()) @db.DateTime(3)
+  completedAt        DateTime?       @db.DateTime(3)
+
+  user         User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan         SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  subscription Subscription?    @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([planId])
+  @@index([subscriptionId])
+  @@index([status, createdAt])
+}
+
+model TitleDeed {
+  id                 String             @id @default(cuid()) @db.VarChar(30)
+  titleDeedNumber    String             @unique @db.VarChar(100)
+  ownerName          String             @db.VarChar(191)
+  location           String             @db.VarChar(255)
+  size               Decimal            @db.Decimal(14, 4)
+  availabilityStatus AvailabilityStatus @default(AVAILABLE)
+  landRate           Decimal            @db.Decimal(15, 2)
+  createdAt          DateTime           @default(now()) @db.DateTime(3)
+  updatedAt          DateTime           @updatedAt @db.DateTime(3)
+
+  zoningInfo       ZoningInfo?
+  loansLiens       LoanLien[]
+  ownershipHistory OwnershipHistory[]
+  searchLogs       SearchLog[]
+
+  @@index([availabilityStatus])
+  @@index([location])
+}
+
+model ZoningInfo {
+  id           String   @id @default(cuid()) @db.VarChar(30)
+  titleDeedId  String   @unique @db.VarChar(30)
+  zoneType     ZoneType
+  notes        String?  @db.Text
+  restrictions String?  @db.Text
+  createdAt    DateTime @default(now()) @db.DateTime(3)
+  updatedAt    DateTime @updatedAt @db.DateTime(3)
+
+  titleDeed TitleDeed @relation(fields: [titleDeedId], references: [id], onDelete: Restrict)
+
+  @@index([zoneType])
+}
+
+model LoanLien {
+  id          String         @id @default(cuid()) @db.VarChar(30)
+  titleDeedId String         @db.VarChar(30)
+  type        LoanLienType
+  lender      String         @db.VarChar(191)
+  amount      Decimal        @db.Decimal(15, 2)
+  status      LoanLienStatus
+  dueDate     DateTime?      @db.DateTime(3)
+  notes       String?        @db.Text
+  createdAt   DateTime       @default(now()) @db.DateTime(3)
+  updatedAt   DateTime       @updatedAt @db.DateTime(3)
+
+  titleDeed TitleDeed @relation(fields: [titleDeedId], references: [id], onDelete: Restrict)
+
+  @@index([titleDeedId, status])
+  @@index([status, dueDate])
+}
+
+model OwnershipHistory {
+  id           String   @id @default(cuid()) @db.VarChar(30)
+  titleDeedId  String   @db.VarChar(30)
+  ownerName    String   @db.VarChar(191)
+  transferDate DateTime @db.DateTime(3)
+  notes        String?  @db.Text
+  createdAt    DateTime @default(now()) @db.DateTime(3)
+  updatedAt    DateTime @updatedAt @db.DateTime(3)
+
+  titleDeed TitleDeed @relation(fields: [titleDeedId], references: [id], onDelete: Restrict)
+
+  @@index([titleDeedId, transferDate])
+  @@index([transferDate])
+}
+
+model SearchLog {
+  id                  String   @id @default(cuid()) @db.VarChar(30)
+  userId              String   @db.VarChar(30)
+  titleDeedId         String?  @db.VarChar(30)
+  searchedTitleNumber String   @db.VarChar(100)
+  searchedAt          DateTime @default(now()) @db.DateTime(3)
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  titleDeed TitleDeed? @relation(fields: [titleDeedId], references: [id], onDelete: SetNull)
+
+  @@index([userId, searchedAt])
+  @@index([titleDeedId, searchedAt])
+  @@index([searchedAt])
+  @@index([searchedTitleNumber])
+}
