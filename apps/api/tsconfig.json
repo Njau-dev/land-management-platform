@@ -17,6 +17,11 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "generated/prisma/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "prisma/**/*.ts",
+    "prisma.config.ts",
+    "generated/prisma/**/*.ts"
+  ],
   "exclude": ["dist", "node_modules"]
 }
