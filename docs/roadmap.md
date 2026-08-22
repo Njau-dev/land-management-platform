@@ -1,6 +1,6 @@
 # Land Management Platform — Development Roadmap
 
-**Status:** Ready for implementation
+**Status:** MVP feature implementation complete; deployment and production hardening remain
 **Reference:** `docs/architecture.md`
 
 ---
@@ -36,6 +36,8 @@ Establish the monorepo and development environment before implementing product f
 ---
 
 ## Phase 1 — Backend Foundation & Database
+
+**Implementation status:** Complete.
 
 ### Objective
 
@@ -91,6 +93,8 @@ Create the backend infrastructure upon which all product modules depend.
 
 ## Phase 2 — Authentication & User Accounts
 
+**Implementation status:** Complete.
+
 ### Objective
 
 Allow users to create accounts and access the dashboard independently of subscription status.
@@ -138,6 +142,8 @@ Unauthenticated users cannot access authenticated dashboard pages.
 
 ## Phase 3 — Marketing Site & Pricing
 
+**Implementation status:** Complete.
+
 ### Objective
 
 Create the public acquisition flow.
@@ -177,6 +183,8 @@ A visitor can discover the product, inspect pricing, select a plan and reach acc
 ---
 
 ## Phase 4 — M-Pesa & Subscription System
+
+**Implementation status:** Complete for the Daraja sandbox MVP.
 
 ### Objective
 
@@ -240,6 +248,8 @@ No subscription may be activated merely because an STK request was initiated.
 
 ## Phase 5 — Land Search Engine
 
+**Implementation status:** Complete for the seeded-data MVP. Search execution is subscription-protected, not-found attempts are logged, decimals remain fixed-precision strings, and ownership history is ordered newest first. Parcel-size units remain intentionally unspecified because the current schema and seed data do not define one.
+
 ### Objective
 
 Implement the primary customer value proposition.
@@ -295,6 +305,8 @@ A non-subscriber cannot bypass the restriction by directly calling the API.
 
 ## Phase 6 — PDF Search Reports
 
+**Implementation status:** Complete for the seeded-data MVP. Reports use the same authoritative backend lookup as JSON searches and do not create duplicate normal-search analytics entries.
+
 ### Objective
 
 Allow subscribers to generate a professional portable copy of a search.
@@ -326,44 +338,46 @@ A subscriber can perform a search and download a readable one-page or compact mu
 
 ## Phase 7 — Admin Platform
 
+**Implementation status:** Complete for the MVP. Administrator changes are individually validated, paginated, and protected by current database role/status checks.
+
 ### Objective
 
 Provide the minimum tooling needed to operate the platform without changing seed files manually.
 
 ### Admin Authentication
 
-* [ ] Dedicated admin login
-* [ ] Admin-only layout
-* [ ] Admin authorization
+* [x] Dedicated admin login
+* [x] Admin-only layout
+* [x] Admin authorization
 
 ### Analytics
 
-* [ ] Total users
-* [ ] Active subscribers
-* [ ] Users without subscriptions
-* [ ] Successful payments
-* [ ] Revenue
-* [ ] Searches today
-* [ ] Searches this month
-* [ ] Total title deeds
+* [x] Total users
+* [x] Active subscribers
+* [x] Users without subscriptions
+* [x] Successful payments
+* [x] Revenue
+* [x] Searches today
+* [x] Searches this month
+* [x] Total title deeds
 
 ### User Management
 
-* [ ] User listing
-* [ ] Search/filter users
-* [ ] User detail
-* [ ] View subscription
-* [ ] Suspend user
-* [ ] Reactivate user
+* [x] User listing
+* [x] Search/filter users
+* [x] User detail
+* [x] View subscription
+* [x] Suspend user
+* [x] Reactivate user
 
 ### Land Dataset Management
 
-* [ ] Title deed CRUD
-* [ ] Zoning CRUD
-* [ ] Loan/lien CRUD
-* [ ] Ownership-history CRUD
-* [ ] Validation
-* [ ] Referential-integrity handling
+* [x] Title deed CRUD
+* [x] Zoning CRUD
+* [x] Loan/lien CRUD
+* [x] Ownership-history CRUD
+* [x] Validation
+* [x] Referential-integrity handling
 
 ### Completion Criteria
 

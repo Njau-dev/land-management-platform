@@ -1,0 +1,102 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
+
+import { AuthLoading } from "@/components/auth/auth-loading";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { FormMessage } from "@/components/auth/form-message";
+import { FormField } from "@/components/ui/form-field";
+import { getAuthErrorMessage } from "@/features/auth/auth-errors";
+import { useAuth } from "@/features/auth/use-auth";
+
+export default function AdminLoginPage() {
+  const router = useRouter();
+  const { adminLogin, isAuthenticated, isInitializing, user } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isInitializing && isAuthenticated) {
+      router.replace(user?.role === "ADMIN" ? "/admin" : "/dashboard");
+    }
+  }, [isAuthenticated, isInitializing, router, user?.role]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await adminLogin({ email, password });
+      router.replace("/admin");
+    } catch (submitError) {
+      setError(getAuthErrorMessage(submitError, "Unable to sign in."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (isInitializing) {
+    return <AuthLoading />;
+  }
+
+  return (
+    <AuthShell
+      eyebrow="Administration portal"
+      title="Authorized personnel only"
+      description="Use your internally provisioned administrator account. Public administrator registration is not available."
+    >
+      <form className="space-y-5" onSubmit={handleSubmit}>
+        <FormMessage message={error} />
+        <FormField
+          id="admin-email"
+          label="Administrator email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          disabled={isSubmitting}
+        />
+        <FormField
+          id="admin-password"
+          label="Password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          disabled={isSubmitting}
+        />
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="flex h-11 w-full items-center justify-center rounded-md bg-stone-950 px-4 text-sm font-semibold text-white transition hover:bg-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSubmitting ? "Verifying access…" : "Enter administration"}
+        </button>
+      </form>
+
+      <p className="mt-7 text-center text-sm text-stone-600">
+        Looking for the user portal?{" "}
+        <Link
+          href="/login"
+          className="font-semibold text-emerald-800 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
+        >
+          User sign in
+        </Link>
+      </p>
+    </AuthShell>
+  );
+}

@@ -1,20 +1,31 @@
 import cors from "cors";
-import express, {
-  type NextFunction,
-  type Request,
-  type Response,
-} from "express";
+import cookieParser from "cookie-parser";
+import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 
 import { env } from "./config/env.js";
 import { prisma } from "./lib/prisma.js";
+import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
+import { adminRouter } from "./modules/admin/admin.routes.js";
+import { authRouter } from "./modules/auth/auth.routes.js";
+import { landRouter } from "./modules/land/land.routes.js";
+import { paymentRouter } from "./modules/payments/payment.routes.js";
+import { planRouter } from "./modules/plans/plan.routes.js";
+import { subscriptionRouter } from "./modules/subscriptions/subscription.routes.js";
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: env.FRONTEND_URL }));
+app.use(
+  cors({
+    origin: env.FRONTEND_URL,
+    credentials: true,
+    exposedHeaders: ["Content-Disposition", "X-Report-Reference"],
+  }),
+);
 app.use(express.json());
+app.use(cookieParser());
 
 if (env.NODE_ENV === "development") {
   app.use(morgan("dev"));
@@ -38,27 +49,13 @@ app.get("/api/v1/health", async (_request, response) => {
   }
 });
 
-app.use((_request: Request, response: Response) => {
-  response.status(404).json({
-    status: "error",
-    message: "Route not found",
-  });
-});
-
-app.use(
-  (
-    error: unknown,
-    _request: Request,
-    response: Response,
-    _next: NextFunction,
-  ) => {
-    console.error("Unhandled request error", error);
-
-    response.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
-  },
-);
+app.use("/api/v1", authRouter);
+app.use("/api/v1", planRouter);
+app.use("/api/v1", subscriptionRouter);
+app.use("/api/v1", paymentRouter);
+app.use("/api/v1", landRouter);
+app.use("/api/v1", adminRouter);
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export { app };

@@ -677,6 +677,14 @@ The frontend therefore does not need separate searches for every feature.
 
 The user performs one search and receives one consolidated result.
 
+Implementation notes:
+
+* Title-deed input is trimmed but meaningful punctuation is preserved.
+* Prisma decimal fields are serialized as fixed-precision strings.
+* Ownership history is returned newest first.
+* Normal JSON searches create one `SearchLog`, including not-found attempts. Report downloads reuse the lookup without creating another normal-search log.
+* The seed dataset does not define a parcel-size unit, so clients must present the stored value without claiming hectares or acres.
+
 ---
 
 ## 14. PDF Search Report
@@ -705,6 +713,8 @@ PDF generation requires:
 
 * Authenticated user
 * Active subscription
+
+The implemented report is generated with PDFKit from the same land lookup DTO used by the JSON response. It includes a collision-resistant public report reference and a seeded-data disclaimer; reports are not persisted for the MVP.
 
 ---
 
